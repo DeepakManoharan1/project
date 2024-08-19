@@ -1,0 +1,227 @@
+<html>
+<head>
+<title>Trace_Check.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Trace_Check.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">tkinter </span><span class="s0">as </span><span class="s1">tk</span>
+<span class="s0">from </span><span class="s1">tkinter </span><span class="s0">import </span><span class="s1">scrolledtext</span><span class="s2">, </span><span class="s1">messagebox</span>
+<span class="s0">from </span><span class="s1">tkinter </span><span class="s0">import </span><span class="s1">ttk</span>
+<span class="s0">from </span><span class="s1">tkinter </span><span class="s0">import </span><span class="s1">filedialog</span>
+<span class="s0">from </span><span class="s1">docx </span><span class="s0">import </span><span class="s1">Document</span>
+<span class="s0">from </span><span class="s1">openpyxl </span><span class="s0">import </span><span class="s1">Workbook</span>
+<span class="s0">from </span><span class="s1">openpyxl</span><span class="s2">.</span><span class="s1">styles </span><span class="s0">import </span><span class="s1">Alignment</span>
+
+<span class="s3"># Paths to the DOCX files</span>
+<span class="s1">SRD_MFD_PATH </span><span class="s2">= </span><span class="s4">r'C:\Users\lsrinivasan\Desktop\Trace_documents\SRD_MFD.docx'</span>
+<span class="s1">SDD_MFD_PATH </span><span class="s2">= </span><span class="s4">r'C:\Users\lsrinivasan\Desktop\Trace_documents\SDD_MFD.docx'</span>
+<span class="s1">TC_PATH </span><span class="s2">= </span><span class="s4">r'C:\Users\lsrinivasan\Desktop\Trace_documents\TC_MFD_GROUND_SPEED.docx'</span>
+
+
+<span class="s0">def </span><span class="s1">read_requirement_from_srd</span><span class="s2">(</span><span class="s1">requirement_number</span><span class="s2">):</span>
+    <span class="s1">document </span><span class="s2">= </span><span class="s1">Document</span><span class="s2">(</span><span class="s1">SRD_MFD_PATH</span><span class="s2">)</span>
+    <span class="s1">full_text </span><span class="s2">= </span><span class="s4">&quot;&quot;</span>
+    <span class="s1">capture </span><span class="s2">= </span><span class="s0">False</span>
+    <span class="s0">for </span><span class="s1">para </span><span class="s0">in </span><span class="s1">document</span><span class="s2">.</span><span class="s1">paragraphs</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">requirement_number </span><span class="s0">in </span><span class="s1">para</span><span class="s2">.</span><span class="s1">text</span><span class="s2">:</span>
+            <span class="s1">capture </span><span class="s2">= </span><span class="s0">True</span>
+        <span class="s0">if </span><span class="s1">capture</span><span class="s2">:</span>
+            <span class="s1">full_text </span><span class="s2">+= </span><span class="s1">para</span><span class="s2">.</span><span class="s1">text </span><span class="s2">+ </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot;</span>
+            <span class="s0">if not </span><span class="s1">para</span><span class="s2">.</span><span class="s1">text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">() </span><span class="s0">and </span><span class="s1">full_text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">():  </span><span class="s3"># Stop capturing after a blank line if text is captured</span>
+                <span class="s0">break</span>
+    <span class="s0">return </span><span class="s1">full_text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">() </span><span class="s0">if </span><span class="s1">full_text </span><span class="s0">else </span><span class="s4">&quot;Requirement not found.&quot;</span>
+
+
+<span class="s0">def </span><span class="s1">read_trace_from_sdd</span><span class="s2">(</span><span class="s1">requirement_number</span><span class="s2">):</span>
+    <span class="s1">document </span><span class="s2">= </span><span class="s1">Document</span><span class="s2">(</span><span class="s1">SDD_MFD_PATH</span><span class="s2">)</span>
+    <span class="s1">full_text </span><span class="s2">= </span><span class="s4">&quot;&quot;</span>
+    <span class="s1">current_trace </span><span class="s2">= </span><span class="s4">&quot;&quot;</span>
+    <span class="s1">capture </span><span class="s2">= </span><span class="s0">False</span>
+
+    <span class="s0">for </span><span class="s1">para </span><span class="s0">in </span><span class="s1">document</span><span class="s2">.</span><span class="s1">paragraphs</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s4">&quot;Req ID:&quot; </span><span class="s0">in </span><span class="s1">para</span><span class="s2">.</span><span class="s1">text</span><span class="s2">:</span>
+            <span class="s1">current_trace </span><span class="s2">= </span><span class="s4">&quot;&quot;</span>
+            <span class="s1">capture </span><span class="s2">= </span><span class="s0">False</span>
+        <span class="s1">current_trace </span><span class="s2">+= </span><span class="s1">para</span><span class="s2">.</span><span class="s1">text </span><span class="s2">+ </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot;</span>
+        <span class="s0">if </span><span class="s1">requirement_number </span><span class="s0">in </span><span class="s1">para</span><span class="s2">.</span><span class="s1">text</span><span class="s2">:</span>
+            <span class="s1">capture </span><span class="s2">= </span><span class="s0">True</span>
+            <span class="s1">full_text </span><span class="s2">+= </span><span class="s1">current_trace </span><span class="s2">+ </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot;</span>
+            <span class="s1">current_trace </span><span class="s2">= </span><span class="s4">&quot;&quot;</span>
+
+    <span class="s0">return </span><span class="s1">full_text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">() </span><span class="s0">if </span><span class="s1">full_text </span><span class="s0">else </span><span class="s4">&quot;Trace not found.&quot;</span>
+
+
+<span class="s0">def </span><span class="s1">extract_tables_from_docx</span><span class="s2">(</span><span class="s1">docx_path</span><span class="s2">):</span>
+    <span class="s1">document </span><span class="s2">= </span><span class="s1">Document</span><span class="s2">(</span><span class="s1">docx_path</span><span class="s2">)</span>
+    <span class="s1">tables </span><span class="s2">= []</span>
+    <span class="s0">for </span><span class="s1">table </span><span class="s0">in </span><span class="s1">document</span><span class="s2">.</span><span class="s1">tables</span><span class="s2">:</span>
+        <span class="s1">table_data </span><span class="s2">= []</span>
+        <span class="s0">for </span><span class="s1">row </span><span class="s0">in </span><span class="s1">table</span><span class="s2">.</span><span class="s1">rows</span><span class="s2">:</span>
+            <span class="s1">row_data </span><span class="s2">= [</span><span class="s1">cell</span><span class="s2">.</span><span class="s1">text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">() </span><span class="s0">for </span><span class="s1">cell </span><span class="s0">in </span><span class="s1">row</span><span class="s2">.</span><span class="s1">cells</span><span class="s2">]</span>
+            <span class="s1">table_data</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">row_data</span><span class="s2">)</span>
+        <span class="s1">tables</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">table_data</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">tables</span>
+
+
+<span class="s0">def </span><span class="s1">find_tables_by_requirement</span><span class="s2">(</span><span class="s1">tables</span><span class="s2">, </span><span class="s1">requirement_number</span><span class="s2">):</span>
+    <span class="s1">matching_tables </span><span class="s2">= []</span>
+    <span class="s0">for </span><span class="s1">table </span><span class="s0">in </span><span class="s1">tables</span><span class="s2">:</span>
+        <span class="s0">for </span><span class="s1">row </span><span class="s0">in </span><span class="s1">table</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">row </span><span class="s0">and </span><span class="s1">len</span><span class="s2">(</span><span class="s1">row</span><span class="s2">) &gt; </span><span class="s5">0 </span><span class="s0">and </span><span class="s1">requirement_number </span><span class="s0">in </span><span class="s1">row</span><span class="s2">[-</span><span class="s5">1</span><span class="s2">]:  </span><span class="s3"># Check if requirement number is in the last column</span>
+                <span class="s1">matching_tables</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">table</span><span class="s2">)</span>
+                <span class="s0">break</span>
+    <span class="s0">return </span><span class="s1">matching_tables</span>
+
+
+<span class="s0">def </span><span class="s1">search_requirement</span><span class="s2">():</span>
+    <span class="s1">requirement_number </span><span class="s2">= </span><span class="s1">requirement_combobox</span><span class="s2">.</span><span class="s1">get</span><span class="s2">()</span>
+    <span class="s1">srd_text </span><span class="s2">= </span><span class="s1">read_requirement_from_srd</span><span class="s2">(</span><span class="s1">requirement_number</span><span class="s2">)</span>
+    <span class="s1">sdd_text </span><span class="s2">= </span><span class="s1">read_trace_from_sdd</span><span class="s2">(</span><span class="s1">requirement_number</span><span class="s2">)</span>
+
+    <span class="s3"># Display SRD and SDD text</span>
+    <span class="s1">display_formatted_text</span><span class="s2">(</span><span class="s1">srd_display</span><span class="s2">, </span><span class="s4">f&quot;SRD_MFD Requirement for </span><span class="s0">{</span><span class="s1">requirement_number</span><span class="s0">}</span><span class="s4">:</span><span class="s0">\n</span><span class="s4">&quot; </span><span class="s2">+ </span><span class="s4">&quot;-&quot; </span><span class="s2">* </span><span class="s5">80 </span><span class="s2">+ </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot; </span><span class="s2">+ </span><span class="s1">srd_text</span><span class="s2">)</span>
+    <span class="s1">display_formatted_text</span><span class="s2">(</span><span class="s1">sdd_display</span><span class="s2">, </span><span class="s4">f&quot;SDD_MFD Corresponding Requirements for </span><span class="s0">{</span><span class="s1">requirement_number</span><span class="s0">}</span><span class="s4">:</span><span class="s0">\n</span><span class="s4">&quot; </span><span class="s2">+ </span><span class="s4">&quot;-&quot; </span><span class="s2">* </span><span class="s5">80 </span><span class="s2">+ </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot; </span><span class="s2">+ </span><span class="s1">sdd_text</span><span class="s2">)</span>
+
+    <span class="s3"># Find and display table data</span>
+    <span class="s1">tables </span><span class="s2">= </span><span class="s1">extract_tables_from_docx</span><span class="s2">(</span><span class="s1">TC_PATH</span><span class="s2">)</span>
+    <span class="s1">matched_tables </span><span class="s2">= </span><span class="s1">find_tables_by_requirement</span><span class="s2">(</span><span class="s1">tables</span><span class="s2">, </span><span class="s1">requirement_number</span><span class="s2">)</span>
+
+    <span class="s0">if </span><span class="s1">matched_tables</span><span class="s2">:</span>
+        <span class="s1">table_text </span><span class="s2">= </span><span class="s4">&quot;</span><span class="s0">\n\n</span><span class="s4">&quot;</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span>
+            <span class="s4">f&quot;Table Data related to </span><span class="s0">{</span><span class="s1">requirement_number</span><span class="s0">}</span><span class="s4">:</span><span class="s0">\n</span><span class="s4">&quot; </span><span class="s2">+ </span><span class="s4">&quot;-&quot; </span><span class="s2">* </span><span class="s5">80 </span><span class="s2">+ </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot; </span><span class="s2">+ </span><span class="s1">format_table_as_text</span><span class="s2">(</span><span class="s1">table</span><span class="s2">) </span><span class="s0">for </span><span class="s1">table </span><span class="s0">in </span><span class="s1">matched_tables</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s1">table_text </span><span class="s2">= </span><span class="s4">&quot;Requirement not found.&quot;</span>
+
+    <span class="s1">display_formatted_text</span><span class="s2">(</span><span class="s1">table_display</span><span class="s2">, </span><span class="s1">table_text</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">format_table_as_text</span><span class="s2">(</span><span class="s1">table</span><span class="s2">):</span>
+    <span class="s1">text </span><span class="s2">= </span><span class="s4">&quot;&quot;</span>
+    <span class="s0">for </span><span class="s1">row </span><span class="s0">in </span><span class="s1">table</span><span class="s2">:</span>
+        <span class="s1">text </span><span class="s2">+= </span><span class="s4">&quot; | &quot;</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">row</span><span class="s2">) + </span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">&quot;</span>
+    <span class="s0">return </span><span class="s1">text</span><span class="s2">.</span><span class="s1">strip</span><span class="s2">()</span>
+
+
+<span class="s0">def </span><span class="s1">display_formatted_text</span><span class="s2">(</span><span class="s1">display_widget</span><span class="s2">, </span><span class="s1">text</span><span class="s2">):</span>
+    <span class="s1">display_widget</span><span class="s2">.</span><span class="s1">configure</span><span class="s2">(</span><span class="s1">state</span><span class="s2">=</span><span class="s4">'normal'</span><span class="s2">)</span>
+    <span class="s1">display_widget</span><span class="s2">.</span><span class="s1">delete</span><span class="s2">(</span><span class="s5">1.0</span><span class="s2">, </span><span class="s1">tk</span><span class="s2">.</span><span class="s1">END</span><span class="s2">)</span>
+    <span class="s1">display_widget</span><span class="s2">.</span><span class="s1">insert</span><span class="s2">(</span><span class="s1">tk</span><span class="s2">.</span><span class="s1">END</span><span class="s2">, </span><span class="s1">text</span><span class="s2">)</span>
+    <span class="s1">display_widget</span><span class="s2">.</span><span class="s1">configure</span><span class="s2">(</span><span class="s1">state</span><span class="s2">=</span><span class="s4">'disabled'</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">save_to_excel</span><span class="s2">():</span>
+    <span class="s1">requirement_number </span><span class="s2">= </span><span class="s1">requirement_combobox</span><span class="s2">.</span><span class="s1">get</span><span class="s2">()</span>
+    <span class="s1">srd_text </span><span class="s2">= </span><span class="s1">read_requirement_from_srd</span><span class="s2">(</span><span class="s1">requirement_number</span><span class="s2">)</span>
+    <span class="s1">sdd_text </span><span class="s2">= </span><span class="s1">read_trace_from_sdd</span><span class="s2">(</span><span class="s1">requirement_number</span><span class="s2">)</span>
+    <span class="s1">tables </span><span class="s2">= </span><span class="s1">extract_tables_from_docx</span><span class="s2">(</span><span class="s1">TC_PATH</span><span class="s2">)</span>
+    <span class="s1">matched_tables </span><span class="s2">= </span><span class="s1">find_tables_by_requirement</span><span class="s2">(</span><span class="s1">tables</span><span class="s2">, </span><span class="s1">requirement_number</span><span class="s2">)</span>
+
+    <span class="s3"># Prompt user to select save location</span>
+    <span class="s1">file_path </span><span class="s2">= </span><span class="s1">filedialog</span><span class="s2">.</span><span class="s1">asksaveasfilename</span><span class="s2">(</span><span class="s1">defaultextension</span><span class="s2">=</span><span class="s4">&quot;.xlsx&quot;</span><span class="s2">,</span>
+                                             <span class="s1">filetypes</span><span class="s2">=[(</span><span class="s4">&quot;Excel files&quot;</span><span class="s2">, </span><span class="s4">&quot;*.xlsx&quot;</span><span class="s2">), (</span><span class="s4">&quot;All files&quot;</span><span class="s2">, </span><span class="s4">&quot;*.*&quot;</span><span class="s2">)])</span>
+    <span class="s0">if not </span><span class="s1">file_path</span><span class="s2">:</span>
+        <span class="s0">return</span>
+
+    <span class="s3"># Create a new Excel workbook and add data</span>
+    <span class="s1">workbook </span><span class="s2">= </span><span class="s1">Workbook</span><span class="s2">()</span>
+    <span class="s1">sheet </span><span class="s2">= </span><span class="s1">workbook</span><span class="s2">.</span><span class="s1">active</span>
+    <span class="s1">sheet</span><span class="s2">.</span><span class="s1">title </span><span class="s2">= </span><span class="s4">&quot;Requirement Data&quot;</span>
+
+    <span class="s3"># Add SRD data</span>
+    <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([</span><span class="s4">&quot;SRD_MFD Requirement&quot;</span><span class="s2">])</span>
+    <span class="s1">srd_text_lines </span><span class="s2">= </span><span class="s1">srd_text</span><span class="s2">.</span><span class="s1">split</span><span class="s2">(</span><span class="s4">'</span><span class="s0">\n</span><span class="s4">'</span><span class="s2">)</span>
+    <span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">srd_text_lines</span><span class="s2">:</span>
+        <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([</span><span class="s1">line</span><span class="s2">])</span>
+    <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([])  </span><span class="s3"># Add an empty row for spacing</span>
+
+    <span class="s3"># Add SDD data</span>
+    <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([</span><span class="s4">&quot;SDD_MFD Corresponding Requirements&quot;</span><span class="s2">])</span>
+    <span class="s1">sdd_text_lines </span><span class="s2">= </span><span class="s1">sdd_text</span><span class="s2">.</span><span class="s1">split</span><span class="s2">(</span><span class="s4">'</span><span class="s0">\n</span><span class="s4">'</span><span class="s2">)</span>
+    <span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">sdd_text_lines</span><span class="s2">:</span>
+        <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([</span><span class="s1">line</span><span class="s2">])</span>
+    <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([])  </span><span class="s3"># Add an empty row for spacing</span>
+
+    <span class="s3"># Add table data</span>
+    <span class="s0">for </span><span class="s1">i</span><span class="s2">, </span><span class="s1">table </span><span class="s0">in </span><span class="s1">enumerate</span><span class="s2">(</span><span class="s1">matched_tables</span><span class="s2">):</span>
+        <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([</span><span class="s4">f'Table </span><span class="s0">{</span><span class="s1">i </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">} </span><span class="s4">Data'</span><span class="s2">])</span>
+        <span class="s0">for </span><span class="s1">row </span><span class="s0">in </span><span class="s1">table</span><span class="s2">:</span>
+            <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">row</span><span class="s2">)</span>
+        <span class="s1">sheet</span><span class="s2">.</span><span class="s1">append</span><span class="s2">([])  </span><span class="s3"># Add an empty row for spacing</span>
+
+    <span class="s3"># Adjust column width and alignment</span>
+    <span class="s0">for </span><span class="s1">col </span><span class="s0">in </span><span class="s1">sheet</span><span class="s2">.</span><span class="s1">columns</span><span class="s2">:</span>
+        <span class="s1">max_length </span><span class="s2">= </span><span class="s5">0</span>
+        <span class="s1">column </span><span class="s2">= </span><span class="s1">col</span><span class="s2">[</span><span class="s5">0</span><span class="s2">].</span><span class="s1">column_letter  </span><span class="s3"># Get the column name</span>
+        <span class="s0">for </span><span class="s1">cell </span><span class="s0">in </span><span class="s1">col</span><span class="s2">:</span>
+            <span class="s0">try</span><span class="s2">:</span>
+                <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">str</span><span class="s2">(</span><span class="s1">cell</span><span class="s2">.</span><span class="s1">value</span><span class="s2">)) &gt; </span><span class="s1">max_length</span><span class="s2">:</span>
+                    <span class="s1">max_length </span><span class="s2">= </span><span class="s1">len</span><span class="s2">(</span><span class="s1">cell</span><span class="s2">.</span><span class="s1">value</span><span class="s2">)</span>
+            <span class="s0">except</span><span class="s2">:</span>
+                <span class="s0">pass</span>
+        <span class="s1">adjusted_width </span><span class="s2">= (</span><span class="s1">max_length </span><span class="s2">+ </span><span class="s5">2</span><span class="s2">)</span>
+        <span class="s1">sheet</span><span class="s2">.</span><span class="s1">column_dimensions</span><span class="s2">[</span><span class="s1">column</span><span class="s2">].</span><span class="s1">width </span><span class="s2">= </span><span class="s1">adjusted_width</span>
+
+    <span class="s0">for </span><span class="s1">row </span><span class="s0">in </span><span class="s1">sheet</span><span class="s2">.</span><span class="s1">iter_rows</span><span class="s2">():</span>
+        <span class="s0">for </span><span class="s1">cell </span><span class="s0">in </span><span class="s1">row</span><span class="s2">:</span>
+            <span class="s1">cell</span><span class="s2">.</span><span class="s1">alignment </span><span class="s2">= </span><span class="s1">Alignment</span><span class="s2">(</span><span class="s1">wrapText</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">vertical</span><span class="s2">=</span><span class="s4">'top'</span><span class="s2">)</span>
+
+    <span class="s3"># Save the workbook</span>
+    <span class="s1">workbook</span><span class="s2">.</span><span class="s1">save</span><span class="s2">(</span><span class="s1">file_path</span><span class="s2">)</span>
+    <span class="s1">messagebox</span><span class="s2">.</span><span class="s1">showinfo</span><span class="s2">(</span><span class="s4">&quot;Save Successful&quot;</span><span class="s2">, </span><span class="s4">f&quot;Data saved to '</span><span class="s0">{</span><span class="s1">file_path</span><span class="s0">}</span><span class="s4">'&quot;</span><span class="s2">)</span>
+
+
+<span class="s3"># Create the main window</span>
+<span class="s1">window </span><span class="s2">= </span><span class="s1">tk</span><span class="s2">.</span><span class="s1">Tk</span><span class="s2">()</span>
+<span class="s1">window</span><span class="s2">.</span><span class="s1">title</span><span class="s2">(</span><span class="s4">&quot;Document Search Tool&quot;</span><span class="s2">)</span>
+
+<span class="s3"># Set the window size</span>
+<span class="s1">window</span><span class="s2">.</span><span class="s1">geometry</span><span class="s2">(</span><span class="s4">'1200x1000'</span><span class="s2">)</span>
+
+<span class="s3"># Create the search bar and button</span>
+<span class="s1">tk</span><span class="s2">.</span><span class="s1">Label</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">text</span><span class="s2">=</span><span class="s4">&quot;Select Requirement Number:&quot;</span><span class="s2">).</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+
+<span class="s3"># Generate requirement numbers</span>
+<span class="s1">requirement_numbers </span><span class="s2">= [</span><span class="s4">f'MFD_HLR_</span><span class="s0">{</span><span class="s1">i</span><span class="s0">:</span><span class="s4">03</span><span class="s0">}</span><span class="s4">' </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s5">1</span><span class="s2">, </span><span class="s5">465</span><span class="s2">)]  </span><span class="s3"># Adjust range based on your data</span>
+
+<span class="s3"># Create a combobox for requirement numbers</span>
+<span class="s1">requirement_combobox </span><span class="s2">= </span><span class="s1">ttk</span><span class="s2">.</span><span class="s1">Combobox</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">values</span><span class="s2">=</span><span class="s1">requirement_numbers</span><span class="s2">)</span>
+<span class="s1">requirement_combobox</span><span class="s2">.</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">1</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+<span class="s1">requirement_combobox</span><span class="s2">.</span><span class="s1">current</span><span class="s2">(</span><span class="s5">0</span><span class="s2">)  </span><span class="s3"># Set default selection to the first item</span>
+
+<span class="s1">search_button </span><span class="s2">= </span><span class="s1">tk</span><span class="s2">.</span><span class="s1">Button</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">text</span><span class="s2">=</span><span class="s4">&quot;Search&quot;</span><span class="s2">, </span><span class="s1">command</span><span class="s2">=</span><span class="s1">search_requirement</span><span class="s2">)</span>
+<span class="s1">search_button</span><span class="s2">.</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">2</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+
+<span class="s1">save_button </span><span class="s2">= </span><span class="s1">tk</span><span class="s2">.</span><span class="s1">Button</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">text</span><span class="s2">=</span><span class="s4">&quot;Save&quot;</span><span class="s2">, </span><span class="s1">command</span><span class="s2">=</span><span class="s1">save_to_excel</span><span class="s2">)</span>
+<span class="s1">save_button</span><span class="s2">.</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">3</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+
+<span class="s3"># Create the display areas</span>
+<span class="s1">tk</span><span class="s2">.</span><span class="s1">Label</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">text</span><span class="s2">=</span><span class="s4">&quot;SRD_MFD Requirement Text:&quot;</span><span class="s2">).</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">1</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+<span class="s1">srd_display </span><span class="s2">= </span><span class="s1">scrolledtext</span><span class="s2">.</span><span class="s1">ScrolledText</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">wrap</span><span class="s2">=</span><span class="s1">tk</span><span class="s2">.</span><span class="s1">WORD</span><span class="s2">, </span><span class="s1">width</span><span class="s2">=</span><span class="s5">140</span><span class="s2">, </span><span class="s1">height</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">font</span><span class="s2">=(</span><span class="s4">&quot;Times New Roman&quot;</span><span class="s2">, </span><span class="s5">12</span><span class="s2">))</span>
+<span class="s1">srd_display</span><span class="s2">.</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">2</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">columnspan</span><span class="s2">=</span><span class="s5">4</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+
+<span class="s1">tk</span><span class="s2">.</span><span class="s1">Label</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">text</span><span class="s2">=</span><span class="s4">&quot;SDD_MFD Corresponding Requirements:&quot;</span><span class="s2">).</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">3</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+<span class="s1">sdd_display </span><span class="s2">= </span><span class="s1">scrolledtext</span><span class="s2">.</span><span class="s1">ScrolledText</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">wrap</span><span class="s2">=</span><span class="s1">tk</span><span class="s2">.</span><span class="s1">WORD</span><span class="s2">, </span><span class="s1">width</span><span class="s2">=</span><span class="s5">140</span><span class="s2">, </span><span class="s1">height</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">font</span><span class="s2">=(</span><span class="s4">&quot;Times New Roman&quot;</span><span class="s2">, </span><span class="s5">12</span><span class="s2">))</span>
+<span class="s1">sdd_display</span><span class="s2">.</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">4</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">columnspan</span><span class="s2">=</span><span class="s5">4</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+
+<span class="s1">tk</span><span class="s2">.</span><span class="s1">Label</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">text</span><span class="s2">=</span><span class="s4">&quot;Test Case Table Data:&quot;</span><span class="s2">).</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">5</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+<span class="s1">table_display </span><span class="s2">= </span><span class="s1">scrolledtext</span><span class="s2">.</span><span class="s1">ScrolledText</span><span class="s2">(</span><span class="s1">window</span><span class="s2">, </span><span class="s1">wrap</span><span class="s2">=</span><span class="s1">tk</span><span class="s2">.</span><span class="s1">WORD</span><span class="s2">, </span><span class="s1">width</span><span class="s2">=</span><span class="s5">140</span><span class="s2">, </span><span class="s1">height</span><span class="s2">=</span><span class="s5">15</span><span class="s2">, </span><span class="s1">font</span><span class="s2">=(</span><span class="s4">&quot;Times New Roman&quot;</span><span class="s2">, </span><span class="s5">12</span><span class="s2">))</span>
+<span class="s1">table_display</span><span class="s2">.</span><span class="s1">grid</span><span class="s2">(</span><span class="s1">row</span><span class="s2">=</span><span class="s5">6</span><span class="s2">, </span><span class="s1">column</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">columnspan</span><span class="s2">=</span><span class="s5">4</span><span class="s2">, </span><span class="s1">padx</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">pady</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+
+<span class="s3"># Start the GUI event loop</span>
+<span class="s1">window</span><span class="s2">.</span><span class="s1">mainloop</span><span class="s2">()</span>
+</pre>
+</body>
+</html>
