@@ -1,0 +1,61 @@
+import re
+from docx import Document
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
+# Path to your Word document
+file_path = r"C:\Users\dmanoharan\Downloads\GYM.docx"
+
+# Load the document
+doc = Document(file_path)
+
+def add_hyperlink(paragraph, url, text):
+    # Create the w:hyperlink tag and add needed values
+    part = paragraph.part
+    r_id = part.relate_to(url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink", is_external=True)
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'), r_id)
+
+    # Create a w:r element
+    new_run = OxmlElement('w:r')
+    rPr = OxmlElement('w:rPr')
+
+    # Add underline and color for the hyperlink
+    u = OxmlElement('w:u')
+    u.set(qn('w:val'), 'single')
+    rPr.append(u)
+    color = OxmlElement('w:color')
+    color.set(qn('w:val'), '0000FF')
+    rPr.append(color)
+
+    # Add the text to the w:r element
+    new_run.append(rPr)
+    new_run.text = text
+
+    # Add the w:r element to the w:hyperlink element
+    hyperlink.append(new_run)
+    
+    # Append the hyperlink to the paragraph
+    paragraph._p.append(hyperlink)
+
+# Function to convert **text** to hyperlinks in paragraphs
+def convert_to_hyperlinks(doc):
+    pattern = r"\*\*(.*?)\*\*"
+    for paragraph in doc.paragraphs:
+        matches = re.findall(pattern, paragraph.text)
+        if matches:
+            for match in matches:
+                url = f"https://www.google.com/search?q={match.replace(' ', '+')}"
+                # Replace **text** with text without the asterisks
+                paragraph.text = paragraph.text.replace(f"**{match}**", match)
+                # Add hyperlink
+                add_hyperlink(paragraph, url, match)
+
+# Apply the conversion to the entire document
+convert_to_hyperlinks(doc)
+
+# Save the modified document
+output_path = r"C:\Users\dmanoharan\Downloads\GYM_with_links.docx"
+doc.save(output_path)
+
+print(f"Document saved successfully at {output_path}")
